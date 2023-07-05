@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import {
   Container,
@@ -9,25 +10,31 @@ import {
   Button,
   Wrapper,
 } from './ContactForm.styled';
+import { name, number } from 'redux/selectors';
+import { setName } from 'redux/nameSlice/slice';
+import { setNumber } from 'redux/numberSlice/slice';
+import { nanoid } from 'nanoid';
 function ContactForm({ addContact }) {
-  const [number, setNumber] = useState('');
-  const [name, setName] = useState('');
+  const nameValue = useSelector(name);
+  const numberValue = useSelector(number);
+  const dispatch = useDispatch();
   const onInput = evt => {
-    const name = evt.target.name;
-    if (name === 'name') {
-      setName(evt.target.value);
-    } else if (name === 'number') {
-      setNumber(evt.target.value);
+    const targetName = evt.target.name;
+    if (targetName === 'name') {
+      dispatch(setName(evt.target.value));
+    } else if (targetName === 'number') {
+      dispatch(setNumber(evt.target.value));
     }
   };
   const onSubmit = evt => {
     evt.preventDefault();
+    const form = evt.currentTarget;
     addContact({
-      number,
-      name,
+      number: numberValue,
+      name: nameValue,
+      id: nanoid(),
     });
-    setName('');
-    setNumber('');
+    form.reset();
   };
   return (
     <Container>
@@ -36,7 +43,7 @@ function ContactForm({ addContact }) {
         <Wrapper>
           <Label htmlFor="Name">Name</Label>
           <Input
-            value={name}
+            value={nameValue}
             id="Name"
             type="text"
             name="name"
@@ -49,7 +56,7 @@ function ContactForm({ addContact }) {
         <Wrapper>
           <Label htmlFor="Number">Number</Label>
           <Input
-            value={number}
+            value={numberValue}
             id="Number"
             type="tel"
             name="number"

@@ -1,35 +1,34 @@
-import { nanoid } from 'nanoid';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import ContactForm from './ContactForm';
 import ContactFilter from './ContactFilter';
 import ContactList from './ContactList';
 import { MainTitle } from './App.styled';
+import { contacts, filters } from 'redux/selectors';
+import { setFilters } from 'redux/filtersSlice/slice';
+import { newContact, removeContact } from 'redux/contactsSlice/slice';
 function App() {
-  const [contacts, setContacts] = useState(() =>
-    JSON.parse(localStorage.getItem('contacts') || [])
-  );
-  const [filter, setFilter] = useState('');
-  useEffect(() => {
-    localStorage.setItem('contacts', JSON.stringify(contacts));
-  }, [contacts]);
+  const contactsState = useSelector(contacts);
+  const filtersState = useSelector(filters);
+  const dispatch = useDispatch();
   const handleChangeFilter = evt => {
     const target = evt.target;
-    setFilter(target.value);
+    dispatch(setFilters(target.value));
   };
   const addContact = data => {
-    const item = { ...data, id: nanoid() };
-    const isExistingName = contacts.find(({ name }) => name === data.name);
+    const { name, number, id } = data;
+    const isExistingName = contactsState.find(({ name }) => name === data.name);
     if (isExistingName) {
       alert(`${isExistingName.name} is already in contacts`);
       return;
     }
-    setContacts(prevState => [...prevState, item]);
+    dispatch(newContact({ name, number, id }));
   };
   const handleRemoveItem = ({ target }) => {
-    setContacts(prevState => prevState.filter(({ id }) => id !== target.id));
+    dispatch(removeContact(target.id));
   };
-  const filterNormalize = filter.toLowerCase();
-  const existingName = contacts.filter(({ name }) => {
+  const filterNormalize = filtersState.toLowerCase();
+  const existingName = contactsState.filter(({ name }) => {
     return name.toLowerCase().includes(filterNormalize.trim());
   });
   return (
@@ -38,7 +37,7 @@ function App() {
       <div>
         <MainTitle>Contacts</MainTitle>
         <ContactFilter
-          filter={filter}
+          filter={filtersState}
           handleChangeFilter={handleChangeFilter}
         />
         <ContactList existingName={existingName} onRemove={handleRemoveItem} />
