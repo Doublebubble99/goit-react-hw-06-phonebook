@@ -1,6 +1,9 @@
 import React from 'react';
+import { useState } from 'react';
+import { nanoid } from 'nanoid';
 import { useSelector, useDispatch } from 'react-redux';
-import PropTypes from 'prop-types';
+import { contacts } from 'redux/selectors';
+import { newContact } from 'redux/contactsSlice/slice';
 import {
   Container,
   Title,
@@ -10,31 +13,35 @@ import {
   Button,
   Wrapper,
 } from './ContactForm.styled';
-import { name, number } from 'redux/selectors';
-import { setName } from 'redux/nameSlice/slice';
-import { setNumber } from 'redux/numberSlice/slice';
-import { nanoid } from 'nanoid';
-function ContactForm({ addContact }) {
-  const nameValue = useSelector(name);
-  const numberValue = useSelector(number);
+function ContactForm() {
+  const contactsState = useSelector(contacts);
   const dispatch = useDispatch();
+  const [name, setName] = useState('');
+  const [number, setNumber] = useState('');
   const onInput = evt => {
-    const targetName = evt.target.name;
-    if (targetName === 'name') {
-      dispatch(setName(evt.target.value));
-    } else if (targetName === 'number') {
-      dispatch(setNumber(evt.target.value));
+    const target = evt.target;
+    if (target.name === 'name') {
+      setName(target.value);
+    } else if (target.name === 'number') {
+      setNumber(target.value);
     }
   };
   const onSubmit = evt => {
     evt.preventDefault();
     const form = evt.currentTarget;
-    addContact({
-      number: numberValue,
-      name: nameValue,
-      id: nanoid(),
-    });
     form.reset();
+    const existingName = contactsState.find(contact => contact.name === name);
+    if (existingName) {
+      alert(`You already have ${name} in contacts!`);
+      return;
+    }
+    dispatch(
+      newContact({
+        number,
+        name,
+        id: nanoid(),
+      })
+    );
   };
   return (
     <Container>
@@ -43,7 +50,7 @@ function ContactForm({ addContact }) {
         <Wrapper>
           <Label htmlFor="Name">Name</Label>
           <Input
-            value={nameValue}
+            value={name}
             id="Name"
             type="text"
             name="name"
@@ -56,7 +63,7 @@ function ContactForm({ addContact }) {
         <Wrapper>
           <Label htmlFor="Number">Number</Label>
           <Input
-            value={numberValue}
+            value={number}
             id="Number"
             type="tel"
             name="number"
@@ -72,6 +79,3 @@ function ContactForm({ addContact }) {
   );
 }
 export default ContactForm;
-ContactForm.propTypes = {
-  addContact: PropTypes.func.isRequired,
-};
